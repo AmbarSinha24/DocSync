@@ -3,8 +3,11 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.db import get_db
+from app.routers import approvals, webhooks
 
 app = FastAPI(title="Docs-as-Code Sync Engine")
+app.include_router(webhooks.router)
+app.include_router(approvals.router)
 
 
 @app.get("/health")

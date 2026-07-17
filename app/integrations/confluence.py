@@ -14,8 +14,9 @@ class ConfluenceClient:
             timeout=30.0,
         )
 
-    def get_page(self, page_id: str) -> dict:
-        resp = self._client.get(f"{self.base_url}/wiki/api/v2/pages/{page_id}")
+    def get_page(self, page_id: str, include_body: bool = False) -> dict:
+        params = {"body-format": "storage"} if include_body else {}
+        resp = self._client.get(f"{self.base_url}/wiki/api/v2/pages/{page_id}", params=params)
         resp.raise_for_status()
         return resp.json()
 
@@ -30,6 +31,22 @@ class ConfluenceClient:
         resp = self._client.post(f"{self.base_url}/wiki/api/v2/pages", json=payload)
         resp.raise_for_status()
         return resp.json()
+
+    def update_page(self, page_id: str, title: str, html_body: str, current_version: int) -> dict:
+        payload = {
+            "id": page_id,
+            "status": "current",
+            "title": title,
+            "body": {"representation": "storage", "value": html_body},
+            "version": {"number": current_version + 1},
+        }
+        resp = self._client.put(f"{self.base_url}/wiki/api/v2/pages/{page_id}", json=payload)
+        resp.raise_for_status()
+        return resp.json()
+
+    def delete_page(self, page_id: str) -> None:
+        resp = self._client.delete(f"{self.base_url}/wiki/api/v2/pages/{page_id}")
+        resp.raise_for_status()
 
 
 def get_confluence_client() -> ConfluenceClient:

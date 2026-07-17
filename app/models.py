@@ -85,6 +85,7 @@ class PathMapping(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     repo_id: Mapped[int] = mapped_column(ForeignKey("repos.id"), nullable=False)
     path: Mapped[str] = mapped_column(String(512), nullable=False)
+    title: Mapped[str | None] = mapped_column(String(255), nullable=True)
     page_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     parent_mapping_id: Mapped[int | None] = mapped_column(
         ForeignKey("path_mappings.id"), nullable=True

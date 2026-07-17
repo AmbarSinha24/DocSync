@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     confluence_root_page_id: str = ""
     github_mcp_server_url: str = ""
     github_mcp_token: str = ""
+    deepseek_api_key: str = ""
+    github_webhook_secret: str = ""
 
 
 settings = Settings()
