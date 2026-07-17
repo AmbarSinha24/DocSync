@@ -1,0 +1,293 @@
+DOCS-AS-CODE SYNC ENGINE — DESIGN CONVERSATION TRANSCRIPT
+============================================================
+
+
+USER:
+how is this idea?
+The "Docs-as-Code" Sync Engine
+The Problem: Internal documentation (Notion, Confluence) is always out of sync with the actual database schema or codebase because developers forget to update the wiki after merging a PR. The Users: Engineering Managers and Technical Writers. The Architecture:
+
+* The Backend: Listens for a merged PR webhook. It uses the GitHub MCP (or local Filesystem MCP) to read the code diff (e.g., a new column was added to the User table).
+* The LLM: The backend asks the LLM to read the raw code diff and generate a plain-English explanation of how the system has changed.
+* The Frontend: A "Documentation Approval" React dashboard. The engineering manager sees a split screen. On the left: the old Notion doc. On the right: the LLM's newly generated text. If it looks correct, they click "Approve."
+* The MCP Action: Upon approval, the backend uses the Notion MCP or Confluence MCP to automatically push the new text and update the company wiki.
+* Why it works: Developers won't update docs manually. Completely automating it is dangerous (AI hallucinations ruining the wiki). A frontend with a "Human-in-the-Loop" approval step is the perfect, pragmatic engineering solution.
+
+------------------------------------------------------------
+
+CLAUDE:
+Solid instinct, and the core insight — full automation is scary, silence-by-default is worse, so gate it with human approval — is the right call. A few things I'd stress-test before building:
+
+WHAT'S GENUINELY GOOD
+- PR-merge-as-trigger is the correct event to hook into; it's the one moment you know something changed.
+- Bounding the LLM's job to "explain this diff in plain English" is a well-scoped task — much more tractable than "keep the whole wiki accurate," which is basically unbounded.
+- Split-screen approve/reject is the right UX pattern for this trust level. It turns hallucination risk into a review cost, not a correctness guarantee you're making unsupervised.
+
+THE PART THAT'LL ACTUALLY BE HARD: MAPPING DIFF -> DOC
+You've solved "generate the text" but not "know where it goes." A new column on the User table might live in three different Notion pages (API reference, data model doc, onboarding guide) or none, if nobody's documented that table yet. This is the crux of the whole system, and it's currently missing. Options:
+- Maintain an explicit mapping (code path/table name -> doc page/block ID), curated once and updated as docs grow.
+- Do a retrieval step: embed doc sections, semantically search against the diff summary, surface the top candidate page(s) to the reviewer instead of assuming one target.
+- Fall back gracefully — if no confident match, route to an "unmapped changes" queue rather than silently doing nothing or guessing wrong.
+
+NOISE FILTERING, OR YOUR APPROVERS WILL TUNE OUT
+Most merged PRs don't need a doc update (refactors, tests, dependency bumps, internal renames). If every merge produces a review card, the EM will start rubber-stamping or ignoring the dashboard — which defeats the human-in-the-loop safety property. Add a cheap pre-filter (LLM classification: "does this diff plausibly affect documented, externally-visible behavior?") before anything hits the approval queue.
+
+CONTEXT BEYOND THE DIFF
+A raw diff often can't tell you why something changed. "Added is_verified column" is ambiguous without the PR description, linked ticket, or surrounding code. Feed the LLM the PR title/description and commit messages alongside the diff, not just the diff — otherwise you'll get plausible-sounding but wrong inferences about intent, which is worse than no update because it's confidently wrong.
+
+SURGICAL WRITES, NOT PAGE REPLACEMENT
+Notion/Confluence block APIs make wholesale page rewrites risky — you can clobber unrelated content. You'll want section-level or block-level patching, which means your approval UI needs to show which block is being replaced, not just old-doc-vs-new-text as undifferentiated blobs.
+
+SMALLER THINGS WORTH PLANNING FOR
+- Who approves — EM or tech writer — probably varies by doc type; may need routing logic, not one universal approver.
+- Log every approve/reject/edit; that's free training signal for improving the prompt or few-shotting future generations.
+- Keep an audit trail linking each doc change back to the PR that caused it — valuable on its own, and helps debug bad generations later.
+
+None of this kills the idea — it's a good one, and structurally similar to real tools already operating in this space. The gap between "prototype that works on a demo PR" and "system a team trusts" is almost entirely in the mapping and filtering logic, not the LLM-generates-explanation part, which is the easy 80%. If you want, I can sketch the data model for the diff->doc mapping, or mock up the approval dashboard.
+
+------------------------------------------------------------
+
+USER:
+For Confluence, use structured hierarchical Live Docs. you can do it similar to the codebase structure for easy mapping. with every new push to main branch, perform a git diff with previous commit, and make necessary edits, additions and deletions to the Confluence Space to reflect the current status
+
+------------------------------------------------------------
+
+CLAUDE:
+That's a real improvement — it turns the hardest unsolved problem from the first version (semantic "where does this diff belong") into a positional one (file path -> page path), which is much more tractable and far less hallucination-prone. Worth pressure-testing a few things before you commit to it, though:
+
+CODEBASE STRUCTURE AND DOC STRUCTURE AREN'T THE SAME SHAPE
+A directory tree is organized for imports and build tooling, not for a reader trying to understand the system. This mapping works great for reference docs (API surface, schema definitions, module responsibilities) — much worse for docs that cut across the codebase by design: onboarding guides, architecture rationale, runbooks. I'd scope this system explicitly to the reference-doc tier and keep narrative docs out of the auto-mirror entirely.
+
+PAGE SPRAWL
+Literal folder-to-page mirroring on a real codebase gives you hundreds or thousands of pages, many nearly empty. You want a filter layer — something like .gitignore semantics — deciding which paths are "doc-worthy" versus noise (tests, migrations, generated code, vendor deps).
+
+"DIFF AGAINST PREVIOUS COMMIT" NEEDS TO MEAN PREVIOUS *SYNCED* COMMIT
+If you literally diff against the prior commit on every push, a failed sync silently drops changes and you never catch up. Store the last successfully-synced SHA and diff from there. Also batch: if main gets 10 pushes in an hour, debounce and diff the range rather than running 10 separate edit passes.
+
+RENAMES WILL QUIETLY DESTROY YOUR PAGES
+Plain git diff shows a moved/renamed file as a delete + an add unless you request rename detection (-M). You need to detect renames and issue a move, not a delete/recreate.
+
+THIS WALKS BACK THE HUMAN-IN-THE-LOOP, WHICH WAS YOUR OWN SAFETY ARGUMENT
+Auto-editing the wiki on every push to main is full automation. Two ways to reconcile this with the original instinct:
+- Tiered trust: structural pages sync automatically since they're close to deterministic extraction; narrative/interpretive content still queues for human approval.
+- Async review, not blocking review: auto-publish immediately, but flag every change in a digest a human can skim and revert.
+
+PRESERVING HUMAN EDITS
+If a writer adds context directly in Confluence and a sync regenerates the whole page from the diff, you silently erase it. Keep generated and hand-written content clearly separated (e.g. an AUTO-GENERATED block boundary) so syncs only ever touch their own territory.
+
+The structural mapping is the right call for solving "where does this go." The open question now is really about scope (which docs get this treatment) and what replaces approval as the safety net for the ones that do.
+
+------------------------------------------------------------
+
+USER:
+ofc, .gitignore things wont be added to doc. I didn't meant a direct 1:1 matching, I meant take inspiration from it
+
+------------------------------------------------------------
+
+CLAUDE:
+Fair — that's a reasonable clarification, and it changes what needs designing. "Inspired by" is actually the harder design problem to nail down precisely, because "mirror the folder tree" was at least unambiguous.
+
+ANCHOR ON BOUNDARIES, NOT FILES
+Codebases already encode a hierarchy that's more meaningful than raw folders: services, modules, packages, bounded contexts. Let the top 1-2 levels of code structure set your top-level doc structure, then switch to a fixed template of concept-pages under each (e.g. "Auth API," "Auth Data Model," "Auth Config"), populated by what the diff touches — not by further mirroring subfolders.
+
+USE A MANIFEST, NOT LIVE FOLDER INSPECTION
+Maintain a small hand-curated config once — globs mapped to Confluence page IDs, e.g.:
+  - match: "src/services/auth/**"
+    page: "Auth Service > Data Model"
+    section: "schema"
+A changed file just does a glob lookup. Unmatched files fall into an "unmapped" bucket for a human to triage and add a rule for.
+
+WHY THIS IS WORTH THE EXTRA SETUP STEP
+It's the one part of the system I'd deliberately keep human-curated rather than automated — low-frequency-changing and high-consequence if wrong. Everything downstream (diff detection, batching by last-synced SHA, rename handling, generated-vs-handwritten content boundaries) still applies exactly as before regardless of how granular the mapping is.
+
+------------------------------------------------------------
+
+USER:
+anchor point -> okay but after docs size increases by a certain size then we'll divide it into the sub folders
+
+manifest -> Changes in repo wont reflect in structure, better keep previous logic, let the LLM handle naming for these
+
+keep human then
+
+------------------------------------------------------------
+
+CLAUDE:
+Good, that's a workable synthesis — but a couple of these decisions interact in ways worth flagging.
+
+AUTO-SPLITTING: THE TRIGGER IS THE EASY PART, THE MECHANICS ARE THE HARD PART
+- The split has to update your own routing state — future diffs need to know they now route to the new sub-page.
+- Hand-written commentary on the pre-split page needs a home; leave ambiguous content on the parent (now an index/overview) rather than try to redistribute it.
+- Watch for flapping: use hysteresis, or just never auto-merge back.
+
+DYNAMIC STRUCTURE + LLM NAMING — CAN COEXIST WITH A MANIFEST
+- First time the system sees a new folder, no mapping exists -> LLM proposes a name/location -> written into a persisted mapping.
+- Every sync after that is a lookup against the persisted mapping, not a fresh LLM naming decision — otherwise naming drifts and you get duplicate pages for the same folder.
+- New top-level folders trigger new LLM-naming events; existing folders don't re-trigger it.
+So functionally you still end up with a manifest — it's just auto-populated by the LLM on first sight of a path rather than hand-typed up front.
+
+One gap this doesn't solve: folder renames look identical to "delete a whole subtree, add a new one" from a plain diff. Needs the same similarity/overlap check as file renames.
+
+ON "KEEP HUMAN" — WORTH BEING EXPLICIT ABOUT SCOPE
+Content approval was already the plan. The open question is whether structural changes (create/split/rename/move a page) go through the same gate. I'd argue they should, and arguably need more scrutiny — a bad structural decision corrupts the IA and compounds on every future sync. Content edits can stay lower-friction (maybe async-digest); anything that creates/moves/splits a page always blocks on explicit approval.
+
+------------------------------------------------------------
+
+USER:
+i never said this "page > N blocks, split it"
+
+I meant for cases where we dont have separate pages for lowest file structure. Assumption is file structure would follow SOLID.
+
+So, when we have a folder doc, if it becomes too big, we'll split it according to the file structure. Even the unsplitted previous doc also contains information about its children data items
+
+------------------------------------------------------------
+
+CLAUDE:
+Got it — that's a cleaner mechanism than what I described. Reflecting it back to confirm: a folder-level page isn't just metadata about the folder — it has a section per child (file or subfolder), inline, from the start. When the page gets unwieldy, you're not inventing a new split — you're promoting an existing section into its own page and leaving a summary + link behind. The parent page was always structurally pre-partitioned along the same lines the split would use.
+
+That kills the ambiguity from before: which page hand-written commentary goes to after a split. If a section is already scoped to one child path, a note added within that section travels with it when promoted.
+
+SECTIONS NEED STABLE, ADDRESSABLE ANCHORS FROM DAY ONE
+Each section needs a stable identifier (heading text, anchor, or block ID) tied to its file path — established when the section is first written, not invented at split time. Otherwise promotion is just re-running generation on that subtree, reopening the hallucination risk.
+
+THE SOLID ASSUMPTION IS THE LOAD-BEARING ONE, AND IT WON'T ALWAYS HOLD
+Works cleanly when a folder's children are genuinely separable concerns. Breaks down for grab-bag folders (utils/, common/, helpers/, shared/) — either you get a page with fifteen one-line sections, or the LLM invents groupings that don't map to real subpaths. Worth deciding: attempt sectioning everywhere and accept degenerate output, or detect "flat bag of unrelated files" and fall back to a single unsectioned page?
+
+WHAT TRIGGERS PROMOTION, IF NOT SIZE
+Given the stance on structural changes needing a human gate: system flags a candidate ("this section has grown large / changes often, consider promoting"), human confirms, system executes the mechanical cut.
+
+RECURSION FALLS OUT FOR FREE
+Once promoted, a child page follows the same rule — sections for its own children, splittable the same way. No new logic needed.
+
+------------------------------------------------------------
+
+USER:
+does the system attempt sectioning everywhere and accept degenerate output in messy folders -> YES.
+If you want clean docs, write clean code
+
+I'd assume: system flags a candidate ("this section has grown large / changes often, consider promoting"), human confirms, system executes the mechanical cut-> YES, fine
+
+------------------------------------------------------------
+
+CLAUDE:
+That's a defensible stance, and it's consistent — treating doc quality as a downstream signal of code quality rather than something the tool should paper over.
+
+At this point the design has converged enough to state cleanly:
+
+SYNC MECHANICS
+- Trigger: push to main. Diff against last successfully synced SHA (not just previous commit), with rename detection (-M) for both files and folders.
+- Batches/debounces rapid pushes rather than syncing on every commit individually.
+
+STRUCTURE
+- Doc hierarchy takes inspiration from top-level code boundaries (services/modules), not a literal file mirror.
+- Every folder-level page is pre-partitioned into sections, one per child path, from first generation.
+- Section anchors are stable identifiers tied to file paths, established at write time.
+- Section -> own page promotion is the only "split" mechanism; no separate size-based splitting logic.
+- Messy/grab-bag folders get the same treatment and degrade accordingly — accepted tradeoff.
+
+NAMING/MAPPING
+- Path -> page mapping is LLM-generated on first sighting of a new path, then persisted and reused.
+- New top-level paths trigger new naming events; existing ones are lookups.
+
+HUMAN-IN-THE-LOOP, TIERED
+- Structural changes (new page, promotion/split, rename/move) — always blocks on explicit human approval, higher scrutiny than content.
+- Content edits — lighter-weight, possibly async/digest-style review.
+- Promotion is human-confirmed, system-flagged.
+
+KNOWN OPEN EDGES (accepted or deferred, not unresolved-by-oversight)
+- Grab-bag folders producing degenerate docs — accepted by design.
+- Generated-vs-handwritten content boundary within a section still needs a concrete marker.
+- Narrative/cross-cutting docs are explicitly out of scope for this system.
+
+That's a coherent v1 spec. Options to go next: the persisted mapping's data model, the section-anchor format inside a Confluence page, or a mock of the approval dashboard.
+
+------------------------------------------------------------
+
+USER:
+any more doubts?
+
+------------------------------------------------------------
+
+CLAUDE:
+Yeah, a few things haven't been forced to a decision yet.
+
+DELETIONS ARE DESTRUCTIVE AND HAVEN'T BEEN GATED
+If a file/folder is deleted, does its section/page get deleted from Confluence? Arguably higher-stakes than creation. Should sit in the same "structural change -> human approval" bucket: create, promote, rename, and delete all block on approval; only in-place content edits get the lighter path.
+
+PARTIAL SYNC FAILURE HAS NO DEFINED RECOVERY
+A push might touch many files across many sections. If some fail to write, what's the state? Need per-mapping-entry sync state, not just one repo-wide checkpoint.
+
+FORCE-PUSH / HISTORY REWRITE ON MAIN
+If the stored "last synced SHA" no longer exists in history, a plain diff fails or produces garbage. Needs an explicit fallback (diff against merge-base, or flag for manual reconciliation).
+
+LLM CALL VOLUME/COST ON LARGE DIFFS
+A big PR touching 30 files could mean 30 section-generation calls plus classification calls, every push. Worth deciding: batch multiple section updates into one LLM call with structured output, vs. one call per section.
+
+NEW-PAGE CREATION VS. NAMING — ARE THEY ACTUALLY ONE GATE OR TWO?
+Does the human approve the name the LLM picked, or does naming happen silently and only page-creation gets approved? I'd gate on: LLM proposes name + location together, human approves both in one step, then it's written to the mapping.
+
+NO ROLLBACK PATH
+If a generation ships and is later found wrong or stale — what's the fix? Probably fine to say "manual fix, same as any wiki edit" rather than build tooling for it — but worth deciding on purpose rather than by omission.
+
+None of this blocks moving forward — each is decidable in five minutes, but better decided now than debugged live.
+
+------------------------------------------------------------
+
+USER:
+create, promote, rename, and delete all block on approval; only in-place content edits get the lighter path-> YES
+Partial sync failure has no defined recovery-> Good question, maybe add a command to do this from CLI itself
+LLM call volume/cost on large diffs-> batch folder wise on level 2 (level 0 is root)
+LLM proposes name + location together, human approves both in one step, then it's written to the mapping.-> ok
+
+Now, I have some questions to you
+
+------------------------------------------------------------
+
+CLAUDE:
+Good, all reasonable calls. Quick notes before handing it back:
+
+CLI RECOVERY COMMAND — sensible as the escape hatch, but it only works if you're tracking which pages are actually out of sync. Still implies per-mapping-entry sync status, not just a global SHA pointer — the CLI command needs something to point at ("resync these 3 stuck pages"), otherwise it can only do a full nuke-and-resync.
+
+BATCH AT LEVEL 2 — makes sense as the unit of LLM calls. One edge case: files that sit above level 2 (root-level configs, a lone file directly under a level-1 folder) need an explicit home in this scheme too — probably: anything shallower than level 2 batches at whatever level it actually lives at.
+
+Both fine to leave as-is for now — flagged for later, not blocking.
+
+------------------------------------------------------------
+
+USER:
+How would we use this on a repo?
+How will this be implemented?
+
+Will there be a UI, I would want a UI if possible
+
+------------------------------------------------------------
+
+CLAUDE:
+HOW YOU'D USE THIS ON A REPO
+
+One-time setup:
+1. Install a GitHub App on the repo (scoped to read code + receive push webhooks).
+2. Connect a Confluence space via OAuth, pointed at a root page as the space's top-level anchor.
+3. Bootstrap sync: walk the current main HEAD once, generate the full initial doc tree, route it through approval as one large batch — the day-zero checkpoint before it runs unattended.
+4. Configure include/exclude globs and who the structural-change vs. content-edit approver is.
+
+Ongoing: nothing — it's push-triggered. Manual touchpoints are the approval queue and the CLI resync command.
+
+HOW IT'D BE IMPLEMENTED
+
+Four pieces:
+1. Ingestion service — receives the GitHub webhook on push to main, pulls the diff against last-synced SHA (git diff -M), groups changed paths by level-2 folder for batching.
+2. Orchestrator — for each level-2 batch: looks up existing path->page mappings (Postgres: path, page_id, section_anchor, content_hash, sync_status, last_synced_sha), calls the LLM with diff + PR description + existing doc content, gets back structured output, writes results into a pending-approval queue.
+3. Confluence writer — only fires after approval. Uses block/section-scoped API calls, respects generated-content delimiter markers, updates sync_status per mapping entry.
+4. Approval dashboard — the UI.
+
+WILL THERE BE A UI
+Yes — not optional, given how much of this design leans on the approval step. [Built an interactive React mockup of the approval dashboard: left sidebar queue grouped into Structural Changes / Content Edits, a split-screen panel showing Confluence-current vs. proposed content with inline diff highlighting, a tree-fragment view for "promote" type changes, a "why flagged" note surfacing PR context, and Approve/Send-back actions with a stamp confirmation. Saved as docs-sync-approval-dashboard.jsx.]
+
+------------------------------------------------------------
+
+USER:
+write this whole convo dialogue transcript in a txt file
+
+============================================================
+END OF TRANSCRIPT
+</content>
