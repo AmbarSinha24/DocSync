@@ -116,6 +116,8 @@ class ApprovalRecord(Base):
     change_type: Mapped[ChangeType] = mapped_column(Enum(ChangeType), nullable=False)
     proposed_content: Mapped[str | None] = mapped_column(Text, nullable=True)
     current_content: Mapped[str | None] = mapped_column(Text, nullable=True)
+    diff_patch: Mapped[str | None] = mapped_column(Text, nullable=True)
+    commit_sha: Mapped[str | None] = mapped_column(String(64), nullable=True)
     proposed_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     proposed_location: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     pr_context: Mapped[str | None] = mapped_column(Text, nullable=True)

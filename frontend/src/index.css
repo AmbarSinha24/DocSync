@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+/* class-based dark mode -- toggled by ThemeToggle, not just OS preference */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* warm neutral scale, light side */
+  --color-cream-50: #faf9f5;
+  --color-cream-100: #f4f3ee;
+  --color-cream-200: #e8e6dc;
+  --color-cream-300: #d8d5c8;
+
+  /* warm neutral scale, dark side */
+  --color-charcoal-800: #30302e;
+  --color-charcoal-850: #2a2a28;
+  --color-charcoal-900: #262624;
+  --color-charcoal-950: #1f1e1c;
+
+  /* text */
+  --color-ink-900: #1f1e1c;
+  --color-ink-600: #6b6a63;
+  --color-ink-400: #8f8d84;
+  --color-paper-50: #f7f6f2;
+  --color-paper-300: #b8b6ac;
+
+  /* signature accent -- warm terracotta */
+  --color-accent-400: #e08b6a;
+  --color-accent-500: #cc7a5c;
+  --color-accent-600: #b3654a;
+  --color-accent-700: #96513a;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+  min-height: 100svh;
+}

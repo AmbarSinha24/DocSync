@@ -27,13 +27,25 @@ def _strip_code_fence(text: str) -> str:
 
 
 def propose_name_and_location(
-    path: str, parent_path: str | None, sibling_paths: list[str]
+    path: str,
+    parent_path: str | None,
+    sibling_paths: list[str],
+    human_feedback: str | None = None,
 ) -> dict:
     """First-sighting naming: propose a Confluence page title for a repo path.
 
     Called only once per path (on first sighting); the result is persisted
-    to the path_mappings manifest and reused on every later sync.
+    to the path_mappings manifest and reused on every later sync. human_feedback
+    is only used when re-proposing after a human rejects the first name (the
+    regenerate flow), not on the original first-sighting call.
     """
+    feedback_block = (
+        f"\n\nThe previous proposal was rejected. Reviewer feedback: {human_feedback}\n"
+        f"Take this into account and propose something different."
+        if human_feedback
+        else ""
+    )
+
     prompt = f"""You are naming a documentation page for a path in a codebase. The \
 Confluence space's structure takes inspiration from the codebase's structure but is \
 not a literal 1:1 mirror.
@@ -41,6 +53,7 @@ not a literal 1:1 mirror.
 Path being documented: {path}
 Parent path in the doc hierarchy: {parent_path or "(top level)"}
 Sibling paths already documented under the same parent: {sibling_paths or "(none yet)"}
+{feedback_block}
 
 Propose a short, human-readable page title for this path. Respond with JSON only, \
 no other text: {{"title": "...", "rationale": "one sentence"}}"""
@@ -59,6 +72,7 @@ def generate_section_content(
     commit_messages: list[str],
     commit_sha: str,
     existing_content: str | None,
+    human_feedback: str | None = None,
 ) -> str:
     """Generates the content that goes *inside* a GENERATED marker block (Confluence
     storage format / XHTML) for one section. Does not touch LOCKED content or anything
@@ -80,9 +94,8 @@ def generate_section_content(
         if existing_content
         else ""
     )
-
-    prompt = f"""Generate technical, developer-facing documentation content for a \
-Confluence page section, in Confluence storage format (XHTML), for the path `{path}`.
+    base_context = f"""Documentation content for a Confluence page section, in \
+Confluence storage format (XHTML), for the path `{path}`.
 
 Commit messages for this change:
 {messages_block}
@@ -91,7 +104,31 @@ Diff:
 {diff_patch}
 {existing_block}
 
-Write the content that goes inside a GENERATED block. Structure:
+This is the content that goes inside a GENERATED block. Do not include the outer \
+SECTION or GENERATED marker comments themselves -- only the content that goes inside \
+them. Do not speculate beyond what the diff and commit messages show. Respond with \
+the HTML content only, no other text."""
+
+    if human_feedback:
+        # No competing structural instructions here on purpose -- a prior attempt
+        # that appended feedback as a note *after* a fixed structure list got
+        # ignored in practice (the model kept the full structure regardless of
+        # what the feedback asked for). Giving the feedback as the only
+        # instruction, with no default template to fall back on, actually
+        # changes the output.
+        prompt = f"""{base_context}
+
+A reviewer rejected the previous version of this content and gave this feedback: \
+"{human_feedback}"
+
+Rewrite the content to satisfy that feedback exactly -- if it asks for something \
+shorter, less structured, or different in any way from a typical technical writeup, \
+prioritize satisfying the feedback over including every usual element (overview, \
+code sample, prose, changelog)."""
+    else:
+        prompt = f"""{base_context}
+
+Structure:
 - One <p> stating the module path and a precise technical overview of what this \
 path is responsible for -- technical, not descriptive.
 - An <ac:structured-macro ac:name="code"> block (with an ac:parameter name="language" \
@@ -103,11 +140,7 @@ modes -- whatever's actually relevant to this kind of file. Do not force this in
 fixed table shape; adapt to what's being documented (params/returns for a function, \
 keys/defaults for a config file, columns/constraints for a migration, etc).
 - An <h3>Recent changes (commit {commit_sha[:7]})</h3> section with a <ul> of \
-specific, technical changelog entries referencing exact names/paths from the diff.
-
-Do not include the outer SECTION or GENERATED marker comments themselves -- only the \
-content that goes inside them. Do not speculate beyond what the diff and commit \
-messages show. Respond with the HTML content only, no other text."""
+specific, technical changelog entries referencing exact names/paths from the diff."""
 
     response = _get_client().chat.completions.create(
         model=MODEL,

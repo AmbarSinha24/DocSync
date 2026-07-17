@@ -60,6 +60,23 @@ def insert_section(page_body: str, new_section_html: str) -> str:
     return new_section_html
 
 
+def get_generated_block(page_body: str, anchor: str) -> str | None:
+    """Extracts the current content inside the GENERATED sub-block for the
+    section matching `anchor`, without modifying anything. Returns None if
+    the section (or its GENERATED block) doesn't exist, rather than raising --
+    callers use this for read-only diffing, where "nothing there yet" is a
+    normal, expected outcome, not an error."""
+    section_match = _span_pattern(anchor, "section").search(page_body)
+    if not section_match:
+        return None
+
+    gen_match = _span_pattern(anchor, "gen").search(section_match.group(0))
+    if not gen_match:
+        return None
+
+    return gen_match.group("body").strip()
+
+
 def replace_generated_block(page_body: str, anchor: str, new_generated_html: str) -> str:
     """Replaces only the GENERATED sub-block within the section matching
     `anchor`, leaving the title, any LOCKED block, and everything outside the
