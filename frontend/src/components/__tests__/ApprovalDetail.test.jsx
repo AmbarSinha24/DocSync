@@ -32,20 +32,20 @@ describe('ApprovalDetail', () => {
   })
 
   it('renders the current and proposed content side by side', async () => {
-    render(<ApprovalDetail approvalId={7} onResolved={() => {}} />)
+    render(<ApprovalDetail approvalId={7} onResolved={() => {}} actor="reviewer" />)
 
     expect(await screen.findByText('<p>old content</p>')).toBeInTheDocument()
     expect(screen.getByText('<p>new content</p>')).toBeInTheDocument()
   })
 
   it('renders the why-flagged pr_context', async () => {
-    render(<ApprovalDetail approvalId={7} onResolved={() => {}} />)
+    render(<ApprovalDetail approvalId={7} onResolved={() => {}} actor="reviewer" />)
     expect(await screen.findByText('- Add tax to invoice')).toBeInTheDocument()
   })
 
   it('falls back to a snapshot-mode message when pr_context is absent', async () => {
     api.getApproval.mockResolvedValue({ ...baseDetail, pr_context: null })
-    render(<ApprovalDetail approvalId={7} onResolved={() => {}} />)
+    render(<ApprovalDetail approvalId={7} onResolved={() => {}} actor="reviewer" />)
 
     expect(
       await screen.findByText('No PR context available (one-time snapshot mode).')
@@ -55,7 +55,7 @@ describe('ApprovalDetail', () => {
   it('calls api.approve with the approval id and actor on Approve click', async () => {
     api.approve.mockResolvedValue({})
     const onResolved = vi.fn()
-    render(<ApprovalDetail approvalId={7} onResolved={onResolved} />)
+    render(<ApprovalDetail approvalId={7} onResolved={onResolved} actor="reviewer" />)
 
     await screen.findByText('<p>old content</p>')
     await userEvent.click(screen.getByRole('button', { name: 'Approve' }))
@@ -66,7 +66,7 @@ describe('ApprovalDetail', () => {
 
   it('calls api.reject with the approval id and actor on Reject click', async () => {
     api.reject.mockResolvedValue({})
-    render(<ApprovalDetail approvalId={7} onResolved={() => {}} />)
+    render(<ApprovalDetail approvalId={7} onResolved={() => {}} actor="reviewer" />)
 
     await screen.findByText('<p>old content</p>')
     await userEvent.click(screen.getByRole('button', { name: 'Reject' }))
@@ -76,7 +76,7 @@ describe('ApprovalDetail', () => {
 
   it('shows a feedback box and calls api.regenerate with the typed feedback', async () => {
     api.regenerate.mockResolvedValue({})
-    render(<ApprovalDetail approvalId={7} onResolved={() => {}} />)
+    render(<ApprovalDetail approvalId={7} onResolved={() => {}} actor="reviewer" />)
 
     await screen.findByText('<p>old content</p>')
     await userEvent.click(screen.getByRole('button', { name: 'Regenerate' }))
@@ -92,7 +92,7 @@ describe('ApprovalDetail', () => {
 
   it('calls api.editApproval with edited content on save', async () => {
     api.editApproval.mockResolvedValue({})
-    render(<ApprovalDetail approvalId={7} onResolved={() => {}} />)
+    render(<ApprovalDetail approvalId={7} onResolved={() => {}} actor="reviewer" />)
 
     await screen.findByText('<p>old content</p>')
     await userEvent.click(screen.getByRole('button', { name: 'edit' }))
@@ -112,7 +112,7 @@ describe('ApprovalDetail', () => {
 
   it('does not show a Regenerate button for DELETE records', async () => {
     api.getApproval.mockResolvedValue({ ...baseDetail, change_type: 'delete', proposed_content: null })
-    render(<ApprovalDetail approvalId={7} onResolved={() => {}} />)
+    render(<ApprovalDetail approvalId={7} onResolved={() => {}} actor="reviewer" />)
 
     await screen.findByText('delete')
     expect(screen.queryByRole('button', { name: 'Regenerate' })).not.toBeInTheDocument()

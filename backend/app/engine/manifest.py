@@ -17,6 +17,7 @@ def resolve_mapping(
     parent_path: str | None,
     sibling_paths: list[str],
     parent_mapping_id: int | None = None,
+    parent_batch_mapping_id: int | None = None,
 ) -> PathMapping:
     """Looks up an existing path_mappings row for (repo_id, path). On first
     sighting -- no existing row -- proposes a name via the LLM and persists it,
@@ -25,6 +26,11 @@ def resolve_mapping(
     parent_mapping_id links a section to the batch-level page mapping that
     contains it; left None for batch-level (page) mappings themselves, whose
     parent is the repo's root page, not another PathMapping row.
+
+    parent_batch_mapping_id is the batch-level counterpart: it links one
+    batch/page-level mapping to another (e.g. "backend/lib" -> "backend"),
+    for nesting Confluence pages to match real folder structure. Only ever
+    set on batch-level mappings; always None for a top-level batch.
     """
     existing = db.query(PathMapping).filter_by(repo_id=repo_id, path=path).one_or_none()
     if existing is not None:
@@ -38,6 +44,7 @@ def resolve_mapping(
         name_origin=NameOrigin.LLM_PROPOSED,
         sync_status=SyncStatus.PENDING,
         parent_mapping_id=parent_mapping_id,
+        parent_batch_mapping_id=parent_batch_mapping_id,
         section_anchor=_generate_anchor(path),
     )
     db.add(mapping)

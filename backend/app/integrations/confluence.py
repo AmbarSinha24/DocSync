@@ -32,7 +32,9 @@ class ConfluenceClient:
         resp.raise_for_status()
         return resp.json()
 
-    def update_page(self, page_id: str, title: str, html_body: str, current_version: int) -> dict:
+    def update_page(
+        self, page_id: str, title: str, html_body: str, current_version: int, parent_id: str | None = None
+    ) -> dict:
         payload = {
             "id": page_id,
             "status": "current",
@@ -40,9 +42,24 @@ class ConfluenceClient:
             "body": {"representation": "storage", "value": html_body},
             "version": {"number": current_version + 1},
         }
+        if parent_id is not None:
+            payload["parentId"] = parent_id
         resp = self._client.put(f"{self.base_url}/wiki/api/v2/pages/{page_id}", json=payload)
         resp.raise_for_status()
         return resp.json()
+
+    def move_page(self, page_id: str, new_parent_id: str) -> dict:
+        """Re-parents a page without touching its title or body -- used by the
+        writer's self-heal check when a batch page's real Confluence parent
+        no longer matches where it should now nest."""
+        page = self.get_page(page_id, include_body=True)
+        return self.update_page(
+            page_id,
+            title=page["title"],
+            html_body=page["body"]["storage"]["value"],
+            current_version=page["version"]["number"],
+            parent_id=new_parent_id,
+        )
 
     def delete_page(self, page_id: str) -> None:
         resp = self._client.delete(f"{self.base_url}/wiki/api/v2/pages/{page_id}")

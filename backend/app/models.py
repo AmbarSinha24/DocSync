@@ -52,6 +52,8 @@ class AuditAction(str, enum.Enum):
     REJECTED = "rejected"
     EDITED = "edited"
     REGENERATED = "regenerated"
+    WRITE_SUCCEEDED = "write_succeeded"
+    WRITE_FAILED = "write_failed"
 
 
 class JobStatus(str, enum.Enum):
@@ -70,6 +72,7 @@ class Repo(Base):
     github_installation_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     last_synced_sha: Mapped[str | None] = mapped_column(String(64), nullable=True)
     root_page_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    default_branch: Mapped[str] = mapped_column(String(255), nullable=False, server_default="main")
     structural_approver: Mapped[str | None] = mapped_column(String(255), nullable=True)
     content_approver: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
@@ -90,6 +93,9 @@ class PathMapping(Base):
     parent_mapping_id: Mapped[int | None] = mapped_column(
         ForeignKey("path_mappings.id"), nullable=True
     )
+    parent_batch_mapping_id: Mapped[int | None] = mapped_column(
+        ForeignKey("path_mappings.id"), nullable=True
+    )
     section_anchor: Mapped[str | None] = mapped_column(String(255), nullable=True)
     content_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     sync_status: Mapped[SyncStatus] = mapped_column(
@@ -97,6 +103,7 @@ class PathMapping(Base):
     )
     last_synced_sha: Mapped[str | None] = mapped_column(String(64), nullable=True)
     is_promoted: Mapped[bool] = mapped_column(default=False)
+    is_promotable: Mapped[bool] = mapped_column(default=False)
     name_origin: Mapped[NameOrigin | None] = mapped_column(Enum(NameOrigin), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
@@ -104,7 +111,12 @@ class PathMapping(Base):
     )
 
     repo: Mapped["Repo"] = relationship(back_populates="path_mappings")
-    parent: Mapped["PathMapping | None"] = relationship(remote_side=[id])
+    parent: Mapped["PathMapping | None"] = relationship(
+        remote_side=[id], foreign_keys=[parent_mapping_id]
+    )
+    parent_batch: Mapped["PathMapping | None"] = relationship(
+        remote_side=[id], foreign_keys=[parent_batch_mapping_id]
+    )
     approval_records: Mapped[list["ApprovalRecord"]] = relationship(back_populates="path_mapping")
 
 
@@ -143,6 +155,11 @@ class AuditLog(Base):
     actor: Mapped[str] = mapped_column(String(255), nullable=False)
     commit_sha: Mapped[str | None] = mapped_column(String(64), nullable=True)
     pr_reference: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Snapshot of what EDITED/REGENERATED overwrote -- without these, the
+    # prior value is gone the moment the ApprovalRecord itself is mutated,
+    # leaving the audit trail able to say "an edit happened" but not "to what".
+    previous_content: Mapped[str | None] = mapped_column(Text, nullable=True)
+    previous_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     approval_record: Mapped["ApprovalRecord"] = relationship(back_populates="audit_entries")
@@ -166,3 +183,26 @@ class Job(Base):
     )
 
     repo: Mapped["Repo"] = relationship(back_populates="jobs")
+
+
+class SyncJob(Base):
+    """Tracks a single POST /repos call (add or re-sync) so the frontend can
+    poll for progress instead of blocking on one long HTTP request -- unlike
+    Job above (which is scoped to an existing repo's batches), a SyncJob can
+    exist before any Repo row does, since the target might be a brand-new
+    repo that hasn't been created yet when the job starts."""
+
+    __tablename__ = "sync_jobs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    full_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[JobStatus] = mapped_column(
+        Enum(JobStatus), nullable=False, default=JobStatus.QUEUED
+    )
+    repo_id: Mapped[int | None] = mapped_column(ForeignKey("repos.id"), nullable=True)
+    pending_approvals: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), onupdate=func.now()
+    )

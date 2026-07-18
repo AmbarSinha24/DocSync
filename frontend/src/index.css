@@ -1,35 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 /* class-based dark mode -- toggled by ThemeToggle, not just OS preference */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Outfit', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
-  /* warm neutral scale, light side */
-  --color-cream-50: #faf9f5;
-  --color-cream-100: #f4f3ee;
-  --color-cream-200: #e8e6dc;
-  --color-cream-300: #d8d5c8;
+  /* Custom palette colors */
+  --color-brand-violet: #8b5cf6;
+  --color-brand-indigo: #6366f1;
+  --color-brand-cyan: #06b6d4;
+  --color-brand-pink: #ec4899;
 
-  /* warm neutral scale, dark side */
-  --color-charcoal-800: #30302e;
-  --color-charcoal-850: #2a2a28;
-  --color-charcoal-900: #262624;
-  --color-charcoal-950: #1f1e1c;
+  /* Accent shades */
+  --color-accent-50: #f5f3ff;
+  --color-accent-100: #ede9fe;
+  --color-accent-500: #8b5cf6;
+  --color-accent-600: #7c3aed;
+  --color-accent-700: #6d28d9;
+}
 
-  /* text */
-  --color-ink-900: #1f1e1c;
-  --color-ink-600: #6b6a63;
-  --color-ink-400: #8f8d84;
-  --color-paper-50: #f7f6f2;
-  --color-paper-300: #b8b6ac;
+:root {
+  --border-gradient-start: #6366f1; /* Indigo */
+  --border-gradient-end: #ec4899; /* Pink */
+  --color-primary-glow: rgba(99, 102, 241, 0.08);
+  --color-secondary-glow: rgba(236, 72, 153, 0.04);
+}
 
-  /* signature accent -- warm terracotta */
-  --color-accent-400: #e08b6a;
-  --color-accent-500: #cc7a5c;
-  --color-accent-600: #b3654a;
-  --color-accent-700: #96513a;
+.dark {
+  --border-gradient-start: #06b6d4; /* Cyan */
+  --border-gradient-end: #8b5cf6; /* Violet */
+  --color-primary-glow: rgba(6, 182, 212, 0.08);
+  --color-secondary-glow: rgba(139, 92, 246, 0.05);
 }
 
 body {
@@ -43,3 +47,67 @@ body {
   width: 100%;
   min-height: 100svh;
 }
+
+/* Premium Glassmorphic Card Panel */
+.glass-panel {
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.7);
+}
+
+.dark .glass-panel {
+  background-color: rgba(13, 17, 26, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+/* Crisp Hover-based Gradient Border */
+.gradient-border {
+  position: relative;
+}
+
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px; /* border thickness */
+  background: linear-gradient(135deg, var(--border-gradient-start), var(--border-gradient-end));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.gradient-border:hover::before {
+  opacity: 1;
+}
+
+/* Scrollbar tweaks */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.25);
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.35);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.4);
+}
+

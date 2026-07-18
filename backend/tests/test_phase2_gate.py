@@ -11,6 +11,7 @@ from app.integrations.confluence import get_confluence_client
 from app.models import (
     ApprovalRecord,
     ApprovalStatus,
+    AuditLog,
     ChangeType,
     PathMapping,
     Repo,
@@ -38,6 +39,8 @@ def committing_db():
     page_ids: list[str] = []
     yield session, repo_ids, page_ids
 
+    session.rollback()  # discard anything left uncommitted if the test body raised
+
     client = get_confluence_client()
     for page_id in page_ids:
         try:
@@ -46,6 +49,19 @@ def committing_db():
             pass
     for repo_id in repo_ids:
         mapping_ids = [m.id for m in session.query(PathMapping).filter_by(repo_id=repo_id).all()]
+        approval_ids = [
+            a.id
+            for a in session.query(ApprovalRecord).filter(
+                ApprovalRecord.path_mapping_id.in_(mapping_ids)
+            ).all()
+        ] if mapping_ids else []
+        # AuditLog rows (written by write_approval on every approve/write) must
+        # go first -- their FK to approval_records blocks deleting those rows
+        # otherwise.
+        if approval_ids:
+            session.query(AuditLog).filter(
+                AuditLog.approval_record_id.in_(approval_ids)
+            ).delete(synchronize_session=False)
         session.query(ApprovalRecord).filter(
             ApprovalRecord.path_mapping_id.in_(mapping_ids)
         ).delete(synchronize_session=False)

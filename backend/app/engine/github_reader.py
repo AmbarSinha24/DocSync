@@ -132,6 +132,33 @@ async def _walk_tree(session, owner: str, repo: str, ref: str, path: str = "/") 
     return changes
 
 
+async def resolve_default_branch_head(owner: str, repo: str) -> str:
+    """The current HEAD SHA of the repo's default branch, for the add-repo flow
+    (which starts from a URL, not a webhook payload that already hands us a
+    SHA). list_commits defaults to the default branch when no `sha` is given."""
+    async with github_mcp_session() as session:
+        commits = await _call_tool_json(
+            session, "list_commits", {"owner": owner, "repo": repo, "perPage": 1}
+        )
+    if not commits:
+        raise ValueError(f"{owner}/{repo} has no commits")
+    return commits[0]["sha"]
+
+
+async def resolve_default_branch(owner: str, repo: str) -> str:
+    """The default branch's name (e.g. "main", "master"), for storing on the
+    Repo row so the webhook receiver can watch the right ref per repo instead
+    of a single hardcoded branch."""
+    async with github_mcp_session() as session:
+        result = await _call_tool_json(
+            session, "search_repositories", {"query": f"repo:{owner}/{repo}", "minimal_output": False}
+        )
+    items = result.get("items", [])
+    if not items:
+        raise ValueError(f"{owner}/{repo} not found")
+    return items[0]["default_branch"]
+
+
 async def read_changeset(owner: str, repo: str, target_sha: str, baseline_sha: str | None) -> Changeset:
     async with github_mcp_session() as session:
         if baseline_sha is None:

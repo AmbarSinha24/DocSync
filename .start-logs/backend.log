@@ -1,0 +1,521 @@
+INFO:     Will watch for changes in these directories: ['/Users/ambarsinha/Desktop/Documentify/backend']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [45112] using WatchFiles
+INFO:     Started server process [45133]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:52319 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52373 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52376 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52391 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52397 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52403 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52405 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52673 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52676 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52695 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52698 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52538 - "POST /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53465 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53467 - "GET /repos/30001/tree HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53470 - "GET /repos/30001/tree HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'app/models.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [45133]
+INFO:     Started server process [45442]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'alembic/versions/0bae3d33ee45_add_sync_jobs_table.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [45442]
+INFO:     Started server process [45448]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/routers/repos.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [45448]
+INFO:     Started server process [45478]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/routers/repos.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [45478]
+INFO:     Started server process [45500]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:55143 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55215 - "GET /repos/30001 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55245 - "POST /repos HTTP/1.1" 202 Accepted
+INFO:     127.0.0.1:55315 - "GET /repo-jobs/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55368 - "POST /repos HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:55370 - "POST /repos HTTP/1.1" 404 Not Found
+WARNING:  WatchFiles detected changes in 'tests/test_phase4_gate.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [45500]
+INFO:     Started server process [45639]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_phase4_gate.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [45639]
+INFO:     Started server process [45653]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_phase4_gate.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [45653]
+INFO:     Started server process [45658]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_phase4_gate.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [45658]
+INFO:     Started server process [45795]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:56620 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56632 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56664 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56686 - "GET /approvals/30001 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56690 - "GET /approvals/30001 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56683 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+Failed to write approval 30001
+Traceback (most recent call last):
+  File "/Users/ambarsinha/Desktop/Documentify/backend/app/engine/write_dispatcher.py", line 20, in write_approved_records
+    write_approval(db, approval_id)
+  File "/Users/ambarsinha/Desktop/Documentify/backend/app/engine/confluence_writer.py", line 71, in write_approval
+    _write_page_level(approval, mapping)
+  File "/Users/ambarsinha/Desktop/Documentify/backend/app/engine/confluence_writer.py", line 121, in _write_page_level
+    new_page = client.create_page(
+               ^^^^^^^^^^^^^^^^^^^
+  File "/Users/ambarsinha/Desktop/Documentify/backend/app/integrations/confluence.py", line 32, in create_page
+    resp.raise_for_status()
+  File "/Users/ambarsinha/Desktop/Documentify/backend/venv/lib/python3.12/site-packages/httpx/_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Client error '400 Bad Request' for url 'https://ambarsi.atlassian.net/wiki/api/v2/pages'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
+INFO:     127.0.0.1:56730 - "POST /approvals/30001/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56742 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56757 - "GET /approvals/30002 HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'tests/test_phase4_gate.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [45795]
+INFO:     Started server process [45839]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:56871 - "GET /approvals/30003 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56891 - "GET /approvals/30006 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56899 - "GET /approvals/30005 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56982 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56985 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57012 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57030 - "GET /approvals/30002 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57035 - "GET /approvals/30002 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57023 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57505 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57507 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57748 - "POST /repos HTTP/1.1" 202 Accepted
+INFO:     127.0.0.1:57798 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57819 - "GET /approvals/30002 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57827 - "GET /approvals/30002 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57815 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57874 - "GET /repo-jobs/9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57875 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57884 - "GET /repo-jobs/9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57886 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57900 - "GET /repo-jobs/9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57958 - "GET /repo-jobs/9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57961 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57965 - "GET /repo-jobs/9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57968 - "GET /repo-jobs/9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /repo-jobs/9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57979 - "GET /repo-jobs/9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57982 - "GET /repo-jobs/9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57985 - "GET /repo-jobs/9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57989 - "GET /repo-jobs/9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58296 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58302 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59317 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59320 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59341 - "GET /repos/30023/tree HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59344 - "GET /repos/30023/tree HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59383 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59386 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59393 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59411 - "GET /approvals/30002 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59414 - "GET /approvals/30002 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59408 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59457 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59460 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59708 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59728 - "GET /approvals/30002 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59731 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59734 - "GET /approvals/30002 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59737 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59725 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59761 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59764 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59748 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59771 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59827 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59841 - "GET /approvals/30002 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59848 - "GET /approvals/30002 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59838 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59901 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59904 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60257 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60271 - "GET /approvals/30002 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60278 - "GET /approvals/30002 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60285 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60288 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60268 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60295 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60313 - "GET /approvals/30002 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60316 - "GET /approvals/30002 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60310 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60410 - "GET /approvals/30002 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60412 - "GET /approvals/30002 HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'app/routers/repos.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [45839]
+INFO:     Started server process [46200]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/routers/repos.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46200]
+INFO:     Started server process [46204]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:61311 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61334 - "GET /approvals/30002 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61342 - "GET /approvals/30002 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61330 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61550 - "POST /approvals/30002/reject HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61553 - "POST /approvals/30003/reject HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61561 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61572 - "GET /approvals/30004 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61617 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61619 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61735 - "POST /repos HTTP/1.1" 202 Accepted
+INFO:     127.0.0.1:61788 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61796 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61809 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61817 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61831 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61839 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61852 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61860 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61962 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61872 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62001 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62008 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62011 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61980 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61991 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61973 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62014 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62004 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62021 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62024 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62027 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62030 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62033 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62040 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62043 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62046 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62049 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62052 - "GET /repo-jobs/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62173 - "DELETE /repos/30036 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62488 - "POST /approvals/30004/reject HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62491 - "POST /approvals/30013/reject HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62498 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62509 - "GET /approvals/30005 HTTP/1.1" 200 OK
+Failed to write approval 30005
+Traceback (most recent call last):
+  File "/Users/ambarsinha/Desktop/Documentify/backend/app/engine/write_dispatcher.py", line 20, in write_approved_records
+    write_approval(db, approval_id)
+  File "/Users/ambarsinha/Desktop/Documentify/backend/app/engine/confluence_writer.py", line 73, in write_approval
+    _write_section_level(approval, mapping, page_id=resolve_content_page_id(mapping))
+  File "/Users/ambarsinha/Desktop/Documentify/backend/app/engine/confluence_writer.py", line 259, in _write_section_level
+    raise ApprovalNotGrantedError(
+app.engine.confluence_writer.ApprovalNotGrantedError: parent page for package.json hasn't been created yet -- approve its CREATE first
+INFO:     127.0.0.1:62524 - "POST /approvals/30005/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62531 - "POST /approvals/30006/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62547 - "POST /approvals/30007/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62563 - "POST /approvals/30008/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62575 - "POST /approvals/30009/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62591 - "POST /approvals/30010/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62603 - "POST /approvals/30011/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62620 - "POST /approvals/30012/approve HTTP/1.1" 200 OK
+Failed to write approval 30014
+Traceback (most recent call last):
+  File "/Users/ambarsinha/Desktop/Documentify/backend/app/engine/write_dispatcher.py", line 20, in write_approved_records
+    write_approval(db, approval_id)
+  File "/Users/ambarsinha/Desktop/Documentify/backend/app/engine/confluence_writer.py", line 73, in write_approval
+    _write_section_level(approval, mapping, page_id=resolve_content_page_id(mapping))
+  File "/Users/ambarsinha/Desktop/Documentify/backend/app/engine/confluence_writer.py", line 259, in _write_section_level
+    raise ApprovalNotGrantedError(
+app.engine.confluence_writer.ApprovalNotGrantedError: parent page for backend/scratch/test_game.js hasn't been created yet -- approve its CREATE first
+INFO:     127.0.0.1:62636 - "POST /approvals/30014/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62643 - "POST /approvals/30015/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62659 - "POST /approvals/30016/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62673 - "POST /approvals/30017/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62689 - "POST /approvals/30018/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62701 - "POST /approvals/30019/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62717 - "POST /approvals/30020/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62729 - "POST /approvals/30021/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62745 - "POST /approvals/30022/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62757 - "POST /approvals/30023/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62773 - "POST /approvals/30024/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62789 - "POST /approvals/30025/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62801 - "POST /approvals/30026/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62821 - "POST /approvals/30027/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62833 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62848 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62851 - "GET /repos HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'app/models.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46204]
+INFO:     Started server process [46628]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/models.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46628]
+INFO:     Started server process [46631]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:49242 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49254 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49266 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49258 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49289 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49292 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49307 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49310 - "GET /repos HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'alembic/versions/e05b5fbf2f27_add_parent_batch_mapping_id_to_path_.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46631]
+INFO:     Started server process [46665]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/engine/batcher.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46665]
+INFO:     Started server process [46780]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/engine/manifest.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46780]
+INFO:     Started server process [46801]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/engine/approval_builder.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46801]
+INFO:     Started server process [46835]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/engine/approval_builder.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46835]
+INFO:     Started server process [46852]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/engine/approval_builder.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46852]
+INFO:     Started server process [46860]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/integrations/confluence.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46860]
+INFO:     Started server process [46883]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/engine/confluence_writer.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46883]
+INFO:     Started server process [46901]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_phase5_batch_nesting_gate.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46901]
+INFO:     Started server process [46944]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_phase5_batch_nesting_gate.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46944]
+INFO:     Started server process [47036]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:52833 - "GET /repos/30001/tree HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52845 - "GET /repos/30001/tree HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52897 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52904 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52907 - "GET /approvals/60061 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52915 - "GET /approvals/60061 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52932 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52935 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52942 - "GET /repos/30001/tree HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52945 - "GET /repos/30001/tree HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53073 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53076 - "GET /repos HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'app/engine/batcher.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [47036]
+INFO:     Started server process [47249]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/engine/approval_builder.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [47249]
+INFO:     Started server process [47308]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/engine/approval_builder.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [47308]
+INFO:     Started server process [47314]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_phase5_batch_nesting_gate.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [47314]
+INFO:     Started server process [47332]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_phase5_batch_nesting_gate.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [47332]
+INFO:     Started server process [47547]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_phase5_batch_nesting_gate.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [47547]
+INFO:     Started server process [47582]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:64855 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64862 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64873 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64875 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64902 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64905 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64908 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64915 - "GET /approvals?status=pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64926 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64929 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64971 - "DELETE /repos/30001 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65151 - "POST /repos HTTP/1.1" 202 Accepted
+INFO:     127.0.0.1:65212 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65226 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65235 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65247 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65255 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65269 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65276 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65289 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65297 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65309 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65317 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65331 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65340 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65352 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65454 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65360 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49869 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49875 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49878 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65479 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65472 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65490 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49881 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49871 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65461 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49884 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49891 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49906 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49909 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49916 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49919 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49922 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49925 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49887 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49894 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49898 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49928 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49902 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49933 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49934 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49937 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49940 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49943 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49946 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49950 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49956 - "GET /repos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49952 - "GET /repo-jobs/60010 HTTP/1.1" 200 OK

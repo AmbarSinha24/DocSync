@@ -1,4 +1,4 @@
-from app.engine.batcher import ROOT_BATCH_KEY
+from app.engine.batcher import ROOT_BATCH_KEY, _batch_key_for_path
 from app.engine.models import Batch, Section
 
 
@@ -21,6 +21,19 @@ def section_full_path(batch: Batch, section: Section) -> str:
     if batch.batch_key == ROOT_BATCH_KEY:
         return section.section_key
     return f"{batch.batch_key}/{section.section_key}"
+
+
+def derive_section_path(path: str) -> str:
+    """The section-level path a raw file path resolves to under the standard
+    batch+section derivation, without needing an actual Batch/Section object
+    built first. Used to map a renamed file's previous_path back to the
+    section it used to belong to, so a rename can be matched against an
+    existing PathMapping instead of always registering as brand new."""
+    batch_key = _batch_key_for_path(path)
+    section_key = _section_key(batch_key, path)
+    if batch_key == ROOT_BATCH_KEY:
+        return section_key
+    return f"{batch_key}/{section_key}"
 
 
 def partition_into_sections(batch: Batch) -> list[Section]:

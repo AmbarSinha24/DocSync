@@ -1,0 +1,22 @@
+
+> frontend@0.0.0 dev
+> vite --port 5173
+
+
+  VITE v8.1.5  ready in 451 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+8:32:00 PM [vite] (client) hmr update /src/pages/ProjectsIndex.jsx, /src/pages/ApprovalQueue.jsx, /src/pages/ProjectTree.jsx, /src/components/TreeNode.jsx, /src/components/ApprovalDetail.jsx, /src/index.css
+8:32:20 PM [vite] (client) hmr update /src/pages/ProjectsIndex.jsx, /src/index.css
+8:32:51 PM [vite] (client) hmr update /src/pages/ProjectsIndex.jsx, /src/index.css
+8:33:04 PM [vite] (client) hmr update /src/pages/ProjectsIndex.jsx, /src/index.css
+8:33:10 PM [vite] (client) hmr update /src/pages/ProjectsIndex.jsx, /src/index.css
+8:50:44 PM [vite] (client) hmr update /src/components/ApprovalListItem.jsx, /src/index.css
+8:51:03 PM [vite] (client) hmr update /src/pages/ApprovalQueue.jsx, /src/index.css
+8:51:36 PM [vite] (client) hmr update /src/pages/ApprovalQueue.jsx, /src/index.css
+8:51:50 PM [vite] (client) hmr update /src/pages/ApprovalQueue.jsx, /src/index.css
+8:52:27 PM [vite] (client) hmr update /src/pages/ApprovalQueue.jsx, /src/index.css
+8:53:20 PM [vite] (client) hmr update /src/pages/ProjectsIndex.jsx, /src/pages/ApprovalQueue.jsx, /src/pages/ProjectTree.jsx, /src/components/TreeNode.jsx, /src/components/ApprovalDetail.jsx, /src/index.css
+8:54:25 PM [vite] (client) hmr update /src/pages/ProjectsIndex.jsx, /src/index.css
+8:54:45 PM [vite] (client) hmr update /src/pages/ProjectsIndex.jsx, /src/index.css

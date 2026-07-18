@@ -87,12 +87,26 @@ def edit_approval(approval_id: int, body: EditRequest, db: Session = Depends(get
     left read-only for now rather than half-implemented."""
     record = _get_pending_or_404(db, approval_id)
 
+    # Snapshotted before mutation -- once proposed_name/proposed_content are
+    # overwritten below, the prior value is gone from the record itself, so
+    # the audit entry is the only place it survives.
+    previous_name = record.proposed_name if body.proposed_name is not None else None
+    previous_content = record.proposed_content if body.proposed_content is not None else None
+
     if body.proposed_name is not None:
         record.proposed_name = body.proposed_name
     if body.proposed_content is not None:
         record.proposed_content = body.proposed_content
 
-    db.add(AuditLog(approval_record_id=record.id, action=AuditAction.EDITED, actor=body.actor))
+    db.add(
+        AuditLog(
+            approval_record_id=record.id,
+            action=AuditAction.EDITED,
+            actor=body.actor,
+            previous_name=previous_name,
+            previous_content=previous_content,
+        )
+    )
     db.commit()
 
     result = _serialize(record)
@@ -118,6 +132,9 @@ def regenerate(approval_id: int, body: RegenerateRequest, db: Session = Depends(
             status_code=422, detail="no stored diff/commit context to regenerate from"
         )
 
+    previous_content = record.proposed_content
+    previous_name = record.proposed_name if record.change_type == ChangeType.CREATE else None
+
     record.proposed_content = generate_section_content(
         path=mapping.path,
         diff_patch=record.diff_patch,
@@ -135,7 +152,13 @@ def regenerate(approval_id: int, body: RegenerateRequest, db: Session = Depends(
         record.proposed_name = proposal["title"]
 
     db.add(
-        AuditLog(approval_record_id=record.id, action=AuditAction.REGENERATED, actor=body.actor)
+        AuditLog(
+            approval_record_id=record.id,
+            action=AuditAction.REGENERATED,
+            actor=body.actor,
+            previous_name=previous_name,
+            previous_content=previous_content,
+        )
     )
     db.commit()
 
