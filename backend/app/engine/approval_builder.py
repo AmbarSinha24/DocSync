@@ -24,13 +24,28 @@ def _combined_patch(section: Section) -> str:
     return "\n".join(parts)
 
 
+MAX_PR_CONTEXT_COMMITS = 50
+MAX_PR_CONTEXT_CHARS = 8_000
+
+
 def _format_pr_context(commit_messages: list[str]) -> str | None:
     """Renders commit messages into the "why flagged" context stored on the
     approval record for the dashboard to display. None for a one-time
-    snapshot (no commit history to show)."""
+    snapshot (no commit history to show). Capped on both message count and
+    total length -- a force-push/history-rewrite recovery can pull up to
+    1000 raw commit messages for one push, with no other size limit on this
+    Text column. Keeps the most recent commits (commit_messages is
+    oldest-first) since those are the most relevant to "why" for the change
+    just synced."""
     if not commit_messages:
         return None
-    return "\n".join(f"- {m}" for m in commit_messages)
+    recent = commit_messages[-MAX_PR_CONTEXT_COMMITS:]
+    lines = [f"- {m.splitlines()[0]}" for m in recent]
+    omitted = len(commit_messages) - len(recent)
+    if omitted > 0:
+        lines.insert(0, f"- ... ({omitted} earlier commits omitted)")
+    text = "\n".join(lines)
+    return text[:MAX_PR_CONTEXT_CHARS]
 
 
 def fetch_current_generated_content(mapping: PathMapping) -> str | None:

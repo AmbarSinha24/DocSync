@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timedelta, timezone
 
 import httpx
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
@@ -12,14 +13,13 @@ from app.engine.core import generate_changeset
 from app.engine.github_reader import resolve_default_branch, resolve_default_branch_head
 from app.engine.github_url import InvalidGitHubUrlError, parse_github_url
 from app.engine.models import RepoTooLargeError
-from app.engine.orchestrator import get_repo_lock, run_sync
+from app.engine.orchestrator import evict_repo_lock, get_repo_lock, run_sync
 from app.integrations.confluence import get_confluence_client
 from app.models import (
     ApprovalRecord,
     ApprovalStatus,
     AuditLog,
     ChangeType,
-    Job,
     JobStatus,
     PathMapping,
     Repo,
@@ -27,6 +27,24 @@ from app.models import (
     SyncJob,
     SyncStatus,
 )
+
+# How long a terminal (DONE/FAILED) SyncJob row is kept before an opportunistic
+# sweep removes it. No cron allowed -- this piggybacks on every POST /repos
+# call instead. Covers both ordinary completed jobs (also reachable via
+# DELETE /repos, but only once a Repo exists) and jobs that failed before a
+# Repo row was ever created (repo_id stays NULL forever, e.g. RepoTooLargeError
+# in _run_add_repo_job) -- DELETE /repos/{id} only ever reaches rows whose
+# repo_id matches a real repo, so a NULL-repo_id row is otherwise unreachable
+# by any existing path.
+SYNC_JOB_RETENTION = timedelta(hours=24)
+
+
+def _cleanup_old_sync_jobs(db: Session) -> None:
+    cutoff = datetime.now(timezone.utc) - SYNC_JOB_RETENTION
+    db.query(SyncJob).filter(
+        SyncJob.status.in_([JobStatus.DONE, JobStatus.FAILED]),
+        SyncJob.updated_at < cutoff,
+    ).delete(synchronize_session=False)
 
 logger = logging.getLogger("docsync.repos")
 
@@ -45,6 +63,11 @@ def _serialize_repo(repo: Repo) -> dict:
         "last_synced_sha": repo.last_synced_sha,
         "root_page_id": repo.root_page_id,
         "created_at": repo.created_at.isoformat(),
+        "confluence_url": (
+            f"{settings.confluence_base_url}/wiki/pages/viewpage.action?pageId={repo.root_page_id}"
+            if repo.root_page_id
+            else None
+        ),
     }
 
 
@@ -111,6 +134,7 @@ def delete_repo(repo_id: int, db: Session = Depends(get_db)):
     repo = db.get(Repo, repo_id)
     if repo is None:
         raise HTTPException(status_code=404, detail="repo not found")
+    full_name = repo.name  # captured before db.commit() expires the instance
 
     mappings = db.query(PathMapping).filter_by(repo_id=repo.id).all()
 
@@ -135,7 +159,6 @@ def delete_repo(repo_id: int, db: Session = Depends(get_db)):
     mapping_ids = [m.id for m in mappings]
 
     db.query(SyncJob).filter_by(repo_id=repo.id).delete()
-    db.query(Job).filter_by(repo_id=repo.id).delete()
 
     if mapping_ids:
         approval_ids_subq = db.query(ApprovalRecord.id).filter(
@@ -157,6 +180,8 @@ def delete_repo(repo_id: int, db: Session = Depends(get_db)):
 
     db.delete(repo)
     db.commit()
+
+    evict_repo_lock(full_name)
 
     return {"deleted": True, "repo_id": repo_id}
 
@@ -202,6 +227,8 @@ async def add_repo(body: AddRepoRequest, background_tasks: BackgroundTasks, db: 
         )
 
     full_name = f"{owner}/{repo_name}"
+
+    _cleanup_old_sync_jobs(db)
 
     job = SyncJob(full_name=full_name, status=JobStatus.QUEUED)
     db.add(job)

@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api'
 import ApprovalListItem from '../components/ApprovalListItem'
 import ApprovalDetail from '../components/ApprovalDetail'
+import RepoPendingCardsRow from '../components/RepoPendingCardsRow'
 
 const BULK_ACTIONS = {
   approve: { label: 'Approve All', verb: 'Approving', fn: (a, id, actor) => api.approve(id, actor) },
@@ -14,7 +15,15 @@ const BULK_ACTIONS = {
 }
 
 export default function ApprovalQueue({ actor }) {
+  const isMountedRef = useRef(true)
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
   const [approvals, setApprovals] = useState(null)
+  const [repos, setRepos] = useState(null)
   const [error, setError] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
 
@@ -30,16 +39,34 @@ export default function ApprovalQueue({ actor }) {
     api
       .listApprovals('pending')
       .then((list) => {
+        if (!isMountedRef.current) return
         setApprovals(list)
         setSelectedId((current) =>
           list.some((a) => a.id === current) ? current : (list[0]?.id ?? null)
         )
         setCheckedIds((current) => new Set([...current].filter((id) => list.some((a) => a.id === id))))
       })
-      .catch((err) => setError(err.message))
+      .catch((err) => {
+        if (isMountedRef.current) setError(err.message)
+      })
   }
 
   useEffect(load, [])
+
+  useEffect(() => {
+    api.listRepos().then(setRepos).catch(() => setRepos([]))
+  }, [])
+
+  const repoGroups = useMemo(() => {
+    if (!approvals || !repos) return []
+    const countByRepoId = new Map()
+    for (const a of approvals) {
+      countByRepoId.set(a.repo_id, (countByRepoId.get(a.repo_id) || 0) + 1)
+    }
+    return repos
+      .filter((r) => countByRepoId.has(r.id))
+      .map((r) => ({ ...r, pendingCount: countByRepoId.get(r.id) }))
+  }, [approvals, repos])
 
   const exitSelectMode = () => {
     setSelectMode(false)
@@ -84,21 +111,25 @@ export default function ApprovalQueue({ actor }) {
     for (let i = 0; i < ids.length; i++) {
       const id = ids[i]
       statuses.set(id, 'processing')
-      setBulkStatuses(new Map(statuses))
+      if (isMountedRef.current) setBulkStatuses(new Map(statuses))
       try {
         await fn(approvals, id, actor, bulkFeedback)
         statuses.set(id, 'done')
       } catch {
         statuses.set(id, 'failed')
-        setBulkError(`${verb} failed for one or more items -- they remain in the queue.`)
+        if (isMountedRef.current) {
+          setBulkError(`${verb} failed for one or more items -- they remain in the queue.`)
+        }
       }
-      setBulkStatuses(new Map(statuses))
-      setBulkProgress({ done: i + 1, total: ids.length })
+      if (isMountedRef.current) {
+        setBulkStatuses(new Map(statuses))
+        setBulkProgress({ done: i + 1, total: ids.length })
+      }
     }
 
     load()
     setTimeout(() => {
-      exitSelectMode()
+      if (isMountedRef.current) exitSelectMode()
     }, 900)
   }
 
@@ -241,8 +272,10 @@ export default function ApprovalQueue({ actor }) {
         </div>
       </div>
 
+      <RepoPendingCardsRow repos={repoGroups} />
+
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[340px_1fr]">
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 self-start lg:sticky lg:top-20 lg:max-h-[calc(100svh-6rem)] lg:overflow-y-auto">
           {/* Structural changes */}
           <div>
             <div className="mb-3 flex items-center gap-2 text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">

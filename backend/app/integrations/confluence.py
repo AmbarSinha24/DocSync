@@ -66,9 +66,15 @@ class ConfluenceClient:
         resp.raise_for_status()
 
 
+_client: ConfluenceClient | None = None
+
+
 def get_confluence_client() -> ConfluenceClient:
-    return ConfluenceClient(
-        base_url=settings.confluence_base_url,
-        email=settings.confluence_email,
-        api_token=settings.confluence_api_token,
-    )
+    global _client
+    if _client is None:
+        _client = ConfluenceClient(
+            base_url=settings.confluence_base_url,
+            email=settings.confluence_email,
+            api_token=settings.confluence_api_token,
+        )
+    return _client

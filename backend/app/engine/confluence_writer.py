@@ -1,6 +1,9 @@
+from datetime import datetime, timezone
+
 from sqlalchemy.orm import Session
 
 from app.engine import markers
+from app.engine.audit import build_audit_summary
 from app.engine.batcher import _batch_key_for_path
 from app.integrations.confluence import get_confluence_client
 from app.models import (
@@ -74,10 +77,29 @@ def write_approval(db: Session, approval_id: int) -> None:
 
         mapping.sync_status = SyncStatus.SYNCED
         _update_promotable_flag(approval, mapping)
-        db.add(AuditLog(approval_record_id=approval.id, action=AuditAction.WRITE_SUCCEEDED, actor=actor))
+        db.add(AuditLog(
+            approval_record_id=approval.id,
+            action=AuditAction.WRITE_SUCCEEDED,
+            actor=actor,
+            summary=build_audit_summary(approval),
+        ))
+        # Cleared only now that _update_promotable_flag (which still needs
+        # proposed_content) and the audit summary (which doesn't depend on
+        # any of these) are both done -- nothing reads this content back
+        # after a successful write, so there's no reason to keep a permanent
+        # copy duplicating what's already live on the Confluence page itself.
+        approval.proposed_content = None
+        approval.current_content = None
+        approval.diff_patch = None
+        approval.pr_context = None
     except Exception:
         mapping.sync_status = SyncStatus.FAILED
-        db.add(AuditLog(approval_record_id=approval.id, action=AuditAction.WRITE_FAILED, actor=actor))
+        db.add(AuditLog(
+            approval_record_id=approval.id,
+            action=AuditAction.WRITE_FAILED,
+            actor=actor,
+            summary=build_audit_summary(approval),
+        ))
         db.flush()
         raise
 
@@ -171,6 +193,7 @@ def _write_page_level(approval: ApprovalRecord, mapping: PathMapping) -> None:
     elif approval.change_type == ChangeType.DELETE:
         client.delete_page(mapping.page_id)
         mapping.page_id = None
+        mapping.removed_at = datetime.now(timezone.utc)
     else:
         raise NotImplementedError(f"page-level {approval.change_type} not yet supported")
 
@@ -292,6 +315,18 @@ def _write_section_level(approval: ApprovalRecord, mapping: PathMapping, page_id
         )
 
     client = get_confluence_client()
+
+    if approval.change_type == ChangeType.DELETE and mapping.is_promoted:
+        # A promoted section owns its entire page -- deleting it means
+        # deleting the whole page, not just emptying its body (which would
+        # otherwise leave an empty page alive in Confluence forever, orphaned
+        # with nothing referencing it -- unlike a normal section sharing a
+        # batch page with others, which just has its content removed below).
+        client.delete_page(page_id)
+        mapping.page_id = None
+        mapping.removed_at = datetime.now(timezone.utc)
+        return
+
     page = client.get_page(page_id, include_body=True)
     body = page["body"]["storage"]["value"]
     version = page["version"]["number"]
@@ -307,6 +342,7 @@ def _write_section_level(approval: ApprovalRecord, mapping: PathMapping, page_id
         )
     elif approval.change_type == ChangeType.DELETE:
         new_body = markers.remove_section(body, mapping.section_anchor)
+        mapping.removed_at = datetime.now(timezone.utc)
     else:
         raise NotImplementedError(f"section-level {approval.change_type} not yet supported")
 

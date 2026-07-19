@@ -2,7 +2,6 @@ import enum
 from datetime import datetime
 
 from sqlalchemy import (
-    JSON,
     DateTime,
     Enum,
     ForeignKey,
@@ -78,7 +77,6 @@ class Repo(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     path_mappings: Mapped[list["PathMapping"]] = relationship(back_populates="repo")
-    jobs: Mapped[list["Job"]] = relationship(back_populates="repo")
 
 
 class PathMapping(Base):
@@ -109,6 +107,7 @@ class PathMapping(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now()
     )
+    removed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     repo: Mapped["Repo"] = relationship(back_populates="path_mappings")
     parent: Mapped["PathMapping | None"] = relationship(
@@ -160,29 +159,16 @@ class AuditLog(Base):
     # leaving the audit trail able to say "an edit happened" but not "to what".
     previous_content: Mapped[str | None] = mapped_column(Text, nullable=True)
     previous_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Short human-readable line describing what this entry was about (e.g.
+    # 'content_edit on backend/lib/db.js -> "Database Library"') -- the only
+    # context that survives once ApprovalRecord.proposed_content/
+    # current_content/diff_patch/pr_context are cleared after a record
+    # resolves (see confluence_writer.write_approval's success path and
+    # approvals.reject), so this is populated on every AuditLog entry.
+    summary: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     approval_record: Mapped["ApprovalRecord"] = relationship(back_populates="audit_entries")
-
-
-class Job(Base):
-    __tablename__ = "jobs"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    repo_id: Mapped[int] = mapped_column(ForeignKey("repos.id"), nullable=False)
-    batch_key: Mapped[str] = mapped_column(String(1024), nullable=False)
-    status: Mapped[JobStatus] = mapped_column(
-        Enum(JobStatus), nullable=False, default=JobStatus.QUEUED
-    )
-    payload: Mapped[dict] = mapped_column(JSON, nullable=False)
-    attempts: Mapped[int] = mapped_column(Integer, default=0)
-    locked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), onupdate=func.now()
-    )
-
-    repo: Mapped["Repo"] = relationship(back_populates="jobs")
 
 
 class SyncJob(Base):

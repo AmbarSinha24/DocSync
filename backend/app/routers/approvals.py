@@ -1,15 +1,18 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
 
 from app.db import get_db
+from app.engine.audit import build_audit_summary
 from app.engine.write_dispatcher import write_approved_records
 from app.integrations.llm import generate_section_content, propose_name_and_location
 from app.models import ApprovalRecord, ApprovalStatus, AuditAction, AuditLog, ChangeType
 
 router = APIRouter()
+
+MAX_PROPOSED_CONTENT_LENGTH = 20_000
 
 
 class ActionRequest(BaseModel):
@@ -20,6 +23,15 @@ class EditRequest(BaseModel):
     actor: str = "unknown"
     proposed_name: str | None = None
     proposed_content: str | None = None
+
+    @field_validator("proposed_content")
+    @classmethod
+    def _cap_length(cls, v: str | None) -> str | None:
+        if v is not None and len(v) > MAX_PROPOSED_CONTENT_LENGTH:
+            raise ValueError(
+                f"proposed_content exceeds {MAX_PROPOSED_CONTENT_LENGTH} character limit"
+            )
+        return v
 
 
 class RegenerateRequest(BaseModel):
@@ -37,6 +49,8 @@ def _serialize(record: ApprovalRecord) -> dict:
         "pr_context": record.pr_context,
         "status": record.status.value,
         "created_at": record.created_at.isoformat(),
+        "repo_id": record.path_mapping.repo_id,
+        "repo_name": record.path_mapping.repo.name,
     }
 
 
@@ -105,6 +119,7 @@ def edit_approval(approval_id: int, body: EditRequest, db: Session = Depends(get
             actor=body.actor,
             previous_name=previous_name,
             previous_content=previous_content,
+            summary=build_audit_summary(record),
         )
     )
     db.commit()
@@ -158,6 +173,7 @@ def regenerate(approval_id: int, body: RegenerateRequest, db: Session = Depends(
             actor=body.actor,
             previous_name=previous_name,
             previous_content=previous_content,
+            summary=build_audit_summary(record),
         )
     )
     db.commit()
@@ -180,7 +196,12 @@ def approve(approval_id: int, body: ActionRequest, db: Session = Depends(get_db)
     record.approver = body.actor
     record.resolved_at = datetime.now(timezone.utc)
     db.add(
-        AuditLog(approval_record_id=record.id, action=AuditAction.APPROVED, actor=body.actor)
+        AuditLog(
+            approval_record_id=record.id,
+            action=AuditAction.APPROVED,
+            actor=body.actor,
+            summary=build_audit_summary(record),
+        )
     )
     db.commit()
 
@@ -196,7 +217,16 @@ def reject(approval_id: int, body: ActionRequest, db: Session = Depends(get_db))
     record.approver = body.actor
     record.resolved_at = datetime.now(timezone.utc)
     db.add(
-        AuditLog(approval_record_id=record.id, action=AuditAction.REJECTED, actor=body.actor)
+        AuditLog(
+            approval_record_id=record.id,
+            action=AuditAction.REJECTED,
+            actor=body.actor,
+            summary=build_audit_summary(record),
+        )
     )
+    record.proposed_content = None
+    record.current_content = None
+    record.diff_patch = None
+    record.pr_context = None
     db.commit()
     return {"id": approval_id, "status": "rejected"}

@@ -32,6 +32,17 @@ def get_repo_lock(owner: str, repo_name: str) -> asyncio.Lock:
     return _repo_locks[f"{owner}/{repo_name}"]
 
 
+def evict_repo_lock(full_name: str) -> None:
+    """Drops the in-process lock entry for a deleted repo (keyed the same way
+    get_repo_lock builds it -- "owner/repo", which is exactly Repo.name) so
+    _repo_locks doesn't grow unboundedly across a long-running process. Safe
+    even if a sync is concurrently holding/awaiting the lock: the Lock object
+    itself isn't destroyed, just unlinked from the dict -- whoever already
+    holds a reference to it keeps using it fine; only a *new* get_repo_lock
+    call after this creates a fresh Lock for the key."""
+    _repo_locks.pop(full_name, None)
+
+
 async def run_sync(
     db: Session,
     owner: str,

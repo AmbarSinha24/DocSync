@@ -20,10 +20,16 @@ def classify_section(db: Session, repo_id: int, section_path: str, section: Sect
     regenerated content. "promote" isn't produced by this classifier at all;
     it's a separate, human-confirmed flow, not something a push automatically
     triggers.
+
+    A row with removed_at set (its prior DELETE write already succeeded) is
+    treated the same as no row at all -- the path is being freshly recreated,
+    not edited, matching resolve_mapping's revival handling. Without this, a
+    revived path would get classified CONTENT_EDIT against a section that's
+    already been physically removed from its page, crashing at write time.
     """
     existing = db.query(PathMapping).filter_by(repo_id=repo_id, path=section_path).one_or_none()
 
-    if existing is None:
+    if existing is None or existing.removed_at is not None:
         return ChangeType.CREATE
     if all(change.status == "removed" for change in section.changes):
         return ChangeType.DELETE

@@ -23,6 +23,12 @@ def append_missing_section_deletions(db: Session, repo_id: int, changeset: Chang
     Only section-level mappings are considered -- batch/page-level delete
     isn't supported by confluence_writer yet (same scope limit noted in
     classify_section and _write_page_level).
+
+    Excludes mappings whose removed_at is already set -- write_approval sets
+    sync_status=SYNCED on *any* successful write including a DELETE, so a
+    section already marked removed would otherwise get a second, redundant
+    synthetic "removed" FileChange appended on every force-push recovery for
+    content that's already gone.
     """
     current_paths = {c.path for c in changeset.changes}
 
@@ -30,6 +36,7 @@ def append_missing_section_deletions(db: Session, repo_id: int, changeset: Chang
         db.query(PathMapping)
         .filter_by(repo_id=repo_id, sync_status=SyncStatus.SYNCED)
         .filter(PathMapping.parent_mapping_id.isnot(None))
+        .filter(PathMapping.removed_at.is_(None))
         .all()
     )
     for mapping in stale_mappings:
